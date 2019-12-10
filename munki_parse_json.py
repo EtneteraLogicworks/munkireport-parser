@@ -11,12 +11,12 @@ import sys
 import json
 import time
 
-filename = sys.argv[1]
+# filename = sys.argv[1]
 
 def sortfunc(r):
     return "MissingCompanyName" if r[0] == None else r[0].split("/")[1]
 
-with open(filename, "r") as fd:
+with open("json_data.json", "r") as fd:
     mydata = json.loads(fd.read())["data"]
     mydata.sort(key=sortfunc)
     for rec in mydata:
