@@ -3,8 +3,8 @@
 
 MR_BASE_URL='https://report.logicworks.cz/index.php?'
 MR_DATA_QUERY='/datatables/data'
-MR_LOGIN='<username>'
-MR_PASSWORD='<password>'
+MR_LOGIN=''
+MR_PASSWORD=''
 
 CLIENT_COLUMNS=(
     "munkireport.manifestname"
@@ -52,5 +52,5 @@ SESSION_COOKIE=$(echo $COOKIE_JAR | sed 's/.*PHPSESSID /PHPSESSID=/')
 # Retrieve data with session cookie
 columns_to_query CLIENT_COLUMNS[@]
 if [ $DEBUG ]; then echo 'Retrieving client data..'; fi
-echo $(curl -s -k --cookie "$SESSION_COOKIE" --data $MR_QUERY ${MR_BASE_URL}${MR_DATA_QUERY})
+echo $(curl -s -k --cookie "$SESSION_COOKIE" --data $MR_QUERY ${MR_BASE_URL}${MR_DATA_QUERY}) > "json_data.json"
 # -k -> insecure option bypass certificate
