@@ -29,6 +29,14 @@ CLIENT_COLUMNS=(
     #max battery <75%
     "reportdata.timestamp"
     #checkin >90days
+    "fan_temps.mssf"
+    #fan status, value "1"
+    "security.sip"
+    #system integrity protection, value "DISABLED"
+    "power.condition"
+    #battery condition, value "SERVICE NOW"
+    "power.cycle_count"
+    #battery cycle count
 )
 
 # Create query from columns
