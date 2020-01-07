@@ -3,8 +3,8 @@
 """
 Created on Tue Oct 22 17:43:26 2019
 TODO:
-    - output formatting
-    - refactoring to be future proof, not hard-coded
+    - fancy output formatting
+    - refactoring to be future proof
 @author: cecky
 """
 import sys
@@ -13,14 +13,18 @@ import time
 
 # filename = sys.argv[1]
 
+unwanted = {"logicworks","logicworks_test","triad","sw"}
+
 def sortfunc(r):
-    return "MissingCompanyName" if r[0] == None else r[0].split("/")[1]
+    return "x" if r[0] == None else r[0].split("/")[1]
 
 with open("json_data.json", "r") as fd:
     mydata = json.loads(fd.read())["data"]
     mydata.sort(key=sortfunc)
     for rec in mydata:
-        if (
+        company = "unknown" if rec[0] == None else rec[0].split("/")[1]
+        if  ((company not in unwanted) and (rec[6] == "/") and
+            (
             # <= 30G local storage
             (rec[6] == "/" and int(rec[7]) <= 32212254720)
             # smart errors
@@ -29,50 +33,41 @@ with open("json_data.json", "r") as fd:
             or (rec[9] != None and int(rec[9]) <= 75)
             # timestamp > 90 days
             or (rec[10] != None and ((time.time() - int(rec[10]))/86400 > 90))
-            ):
-            print("SLA -",
-                  "MissingCompanyName" if rec[0] == None else rec[0].split("/")[1],
-                  "\n",
+            # bad fans
+            or (rec[11] != None and int(rec[11]) == "1")
+            # SIP status
+            or (rec[12] != None and rec[12] == "Disabled")
+            # battery condition
+            or (rec[13] != None and rec[13] == "Service Battery")
+            )):
+            print("SLA: ",company,
                   #
-                  "Serial -",
-                  rec[1],
-                  "\n"
+                  "\nSerial#: ",rec[1],
                   #
-                  "Model -",
-                  rec[2],
-                  "\n",
+                  "\nModel: ",rec[2],
                   #
-                  "Device type -",
-                  rec[3],
-                  "\n",
+                  "\nDevice type: ",rec[3],
                   #
-                  "Hostname -",
-                  rec[4],
-                  "\n",
+                  "\nHostname: ",rec[4],
                   #
-                  "Name and surname -",
-                  "NoUserName" if rec[5] == None else rec[5],
-                  "\n",
+                  "\nName and surname: ","unknown" if rec[5] == None else rec[5],
                   #
-                  "Mountpoints -",
-                  "NoMountPoint" if rec[6] == None else rec[6],
-                  "\n",
+                  # "\nMountpoint: ","unknown" if rec[6] == None else rec[6],
                   #
-                  "Free space (GB) -",
-                  "NoFreeSpaceData" if rec[7] == None else float(rec[7])/1073741824.0,
-                  "\n",
+                  "\nFree space (GB): "+str(float(rec[7])/1073741824.0) if (rec[6] == "/" and int(rec[7]) <= 32212254720) else "",
                   #
-                  "SMART -",
-                  "NoSmartData" if rec[8] == None else int(rec[8]),
-                  "\n",
+                  "\nSMART errors: "+str(int(rec[8])) if (rec[8] != None and int(rec[8]) > 0) else "",
                   #
-                  "Battery (%) -",
-                  "NoBatteryData" if rec[9] == None else int(rec[9]),
-                  "\n",
+                  "\nBattery (%): "+str(int(rec[9])) if (rec[9] != None and int(rec[9]) <= 75) else "",
                   #
-                  "Last checkin -",
-                  "NoTimestamp" if rec[10] == None else time.ctime(int(rec[10])),
-                  "\n",
-                  "------",
-                  "\n\n"
+                  "\nBattery condition: Service battery" if (rec[13] != None and rec[13] == "Service Battery") else "",
+                  #
+                  "\nBattery cycle count: "+str(int(rec[14])) if (rec[14]!=None) else "",
+                  #
+                  "\nSIP status: Disabled" if (rec[12] != None and rec[12] == "Disabled") else "",
+                  #
+                  "\nFan errors !" if (rec[11] != None and int(rec[11]) == "1") else "",
+                  #
+                  "\nLast checkin: "+str(time.ctime(int(rec[10]))) if (rec[10] != None and ((time.time() - int(rec[10]))/86400 > 90)) else "",
+                  "\n------\n"
                   )
