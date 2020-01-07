@@ -26,26 +26,29 @@ Exported json contains following values:
 `rec[8] -> SMART -> "smart_stats.error_count"`  
 `rec[9] -> Battery -> "power.max_percent"`  
 `rec[10] -> Last checkin -> "reportdata.timestamp"`  
+`rec[11] -> Fan status -> "fan_temps.mssf"`
+`rec[12] -> SIP status -> "security.sip"`
+`rec[13] -> Power condition -> "power.condition"`
+`rec[14] -> Battery cycle count -> "power.cycle_count"`
 
 Conditions
 ------
 
-Conditions that are applied to values stored in json:
+Applied conditions:
 
-> <= 30GB of local storage (value stored in B)  
-  `int(rec[7]) <= 32212254720`  
-> smart errors  
-  `int(rec[8]) > 0`  
+> <= 30GB of local storage (value is stored in B)  
+> smart errors > 0  
 > <= 75% battery  
-  `int(rec[9]) <= 75`  
-> timestamp > 90 days  
-  `(time.time() - int(rec[10]))/86400 > 90`  
+> report time > 90 days  
+> fans error =='1'  
+> SIP disabled =="Disabled"  
+> battery power condition =="Service Battery"  
+> add battery cycle counter  
 
-Display error text if conditions do not pass, else display the value in given
-fomat
+Exclude following machine groups
+------
 
-`"NoFreeSpaceData" if rec[7] == None else float(rec[7])/1073741824.0`  
-`"NoSmartData" if rec[8] == None else int(rec[8])`  
-`"NoBatteryData" if rec[9] == None else int(rec[9])`  
-`"NoTimestamp" if rec[10] == None else time.ctime(int(rec[10]))`  
-
+logicworks  
+logicworks_test  
+triad  
+sw  
