@@ -10,16 +10,65 @@ TODO:
 import sys
 import json
 import time
+import requests
 
-# filename = sys.argv[1]
+# Munkireport configuration
+base_url='https://report.logicworks.cz/index.php?'
+login=''
+password=''
 
 unwanted = {"logicworks","logicworks_test","triad","sw"}
+columns=[
+    "munkireport.manifestname",
+    "reportdata.serial_number",
+    "machine.machine_model",
+    "machine.machine_name",
+    "machine.computer_name",
+    "reportdata.long_username",
+    "diskreport.mountpoint",
+    "diskreport.freespace",
+    "smart_stats.error_count",
+    "power.max_percent",
+    "reportdata.timestamp",
+    "fan_temps.mssf",
+    "security.sip",
+    "power.condition",
+    "power.cycle_count"
+]
+
+def authenticate(session):
+  """Authenticate and get a session cookie"""
+  auth_url ='{0}/auth/login'.format(base_url)
+  auth_request = session.post(auth_url, data={'login': login, 'password': password})
+  if auth_request.status_code != 200:
+      print('Invalid url!')
+      raise SystemExit
+
+def generate_column_query():
+    """Generate Munkireport API column query"""
+    q = {'columns[{0}][name]'.format(i): c for i, c in enumerate(columns)}
+    return q
+
+def query(session, data):
+  """Query Munkireport API"""
+  query_url='{0}/datatables/data'.format(base_url)
+  query_data = session.post(query_url, data)
+  return query_data.json()
+
+def get_data():
+    """Get data required for this script from Munkireport"""
+    session = requests.Session()
+    authenticate(session)
+    json_data = query(session, data=generate_column_query())
+    return json_data
 
 def sortfunc(r):
+    """Sort JSON array"""
     return "x" if r[0] == None else r[0].split("/")[1]
 
-with open("json_data.json", "r") as fd:
-    mydata = json.loads(fd.read())["data"]
+def process_data(json_data):
+    """Parse downloaded data and generate report"""
+    mydata = json_data["data"]
     mydata.sort(key=sortfunc)
     for rec in mydata:
         company = "unknown" if rec[0] == None else rec[0].split("/")[1]
@@ -71,3 +120,10 @@ with open("json_data.json", "r") as fd:
                   "\nLast checkin: "+str(time.ctime(int(rec[10]))) if (rec[10] != None and ((time.time() - int(rec[10]))/86400 > 90)) else "",
                   "\n------\n"
                   )
+
+def main():
+    json_data = get_data()
+    process_data(json_data)
+
+if __name__ == "__main__":
+    main()
