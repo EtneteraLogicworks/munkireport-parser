@@ -5,9 +5,10 @@ Created on Tue Oct 22 17:43:26 2019
 @author: cecky
 @maintainer: michal.moravec@logicworks.cz
 """
-import sys
 import json
+import sys
 import time
+
 import requests
 
 # Munkireport configuration
