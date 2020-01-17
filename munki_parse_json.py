@@ -94,17 +94,17 @@ def generic_report(record, report):
     """Add generic information to the report"""
 
     company = get_company(record)
-    report["message"] += f"SLA: {company}\n"
-    report["message"] += f"Serial#: {record[1]}\n"
-    report["message"] += f"Model: {record[2]}\n"
-    report["message"] += f"Device type: {record[3]}\n"
-    report["message"] += f"Hostname: {record[4]}\n"
+    report["message"] += "SLA: {}\n".format(company)
+    report["message"] += "Serial#: {}\n".format(record[1])
+    report["message"] += "Model: {}\n".format(record[2])
+    report["message"] += "Device type: {}\n".format(record[3])
+    report["message"] += "Hostname: {}\n".format(record[4])
 
     if record[5] is not None:
         user_name = record[5]
     else:
         user_name = "unknown"
-    report["message"] += f"Name and surname: {user_name}\n"
+    report["message"] += "Name and surname: {}\n".format(user_name)
 
 
 def storage_report(record, report):
@@ -112,14 +112,14 @@ def storage_report(record, report):
     threshold = 30000000000  # <= 30G local storage
     if record[7] and int(record[7]) <= threshold:
         value = float(record[7]) / 1000000000.0
-        report["message"] += f"Free space (GB): {value:.2f}\n"
+        report["message"] += "Free space (GB): {0:.2g}\n".format(value)
         report["should"] = True
 
 
 def smart_report(record, report):
     """Generate report when there are smart errors"""
     if record[8] is not None and int(record[8]) > 0:
-        report["message"] += f"SMART errors: {record[8]}\n"
+        report["message"] += "SMART errors: {}\n".format(record[8])
         report["should"] = True
 
 
@@ -129,25 +129,25 @@ def battery_report(record, report):
     threshold = 75
     battery_bad = False
     if record[9] is not None and int(record[9]) <= threshold:
-        report["message"] += f"Battery (%): {record[9]}\n"
+        report["message"] += "Battery (%): {}\n".format(record[9])
         report["should"] = True
         battery_bad = True
 
     # Battery condition
     if record[13] == "Service Battery":
-        report["message"] += f"Battery condition: Service battery\n"
+        report["message"] += "Battery condition: Service battery\n"
         report["should"] = True
         battery_bad = True
 
     if battery_bad and record[14] is not None:
-        report["message"] += f"Battery cycle count {record[14]}\n"
+        report["message"] += "Battery cycle count {}\n".format(record[14])
 
 
 def security_report(record, report):
     """Generate report when security settings are disabled"""
     # SIP status
     if record[12] == "Disabled":
-        report["message"] += f"SIP status: Disabled\n"
+        report["message"] += "SIP status: Disabled\n"
         report["should"] = True
 
 
@@ -156,7 +156,7 @@ def uptime_report(record, report):
     threshold = 90  # timestamp > 90 days
     uptime = (time.time() - int(record[10])) / 86400
     if record[10] is not None and uptime > threshold:
-        report["message"] += f"Last checkin: {time.ctime(int(record[10]))}\n"
+        report["message"] += "Last checkin: {}\n".format(time.ctime(int(record[10])))
         report["should"] = True
 
 
@@ -164,7 +164,7 @@ def sensor_report(record, report):
     """Generate report when sensor is in bad state"""
     # bad fans
     if record[11] == "1":
-        report["message"] += f"Fan errors !\n"
+        report["message"] += "Fan errors !\n"
         report["should"] = True
 
 
