@@ -157,10 +157,12 @@ def security_report(record, report):
 def uptime_report(record, report):
     """Generate report when computer is up for too long"""
     threshold = 90  # timestamp > 90 days
-    uptime = (time.time() - int(record[10])) / 86400
-    if record[10] is not None and uptime > threshold:
-        report["message"] += "Last checkin: {}\n".format(time.ctime(int(record[10])))
-        report["should"] = True
+    if record[10] is not None:
+        uptime = (time.time() - int(record[10])) / 86400
+        checkin = time.ctime(int(record[10]))
+        if uptime > threshold:
+            report["message"] += "Last checkin: {}\n".format(checkin)
+            report["should"] = True
 
 
 def sensor_report(record, report):
