@@ -5,8 +5,6 @@ Created on Tue Oct 22 17:43:26 2019
 @author: cecky
 @maintainer: michal.moravec@logicworks.cz
 """
-import json
-import sys
 import time
 
 import requests
@@ -39,7 +37,8 @@ columns = [
 def authenticate(session):
     """Authenticate and get a session cookie"""
     auth_url = "{0}/auth/login".format(base_url)
-    auth_request = session.post(auth_url, data={"login": login, "password": password})
+    auth_data = {"login": login, "password": password}
+    auth_request = session.post(auth_url, data=auth_data)
     if auth_request.status_code != 200:
         print("Invalid url!")
         raise SystemExit
@@ -68,7 +67,7 @@ def get_data():
 
 def sortfunc(r):
     """Sort JSON array"""
-    return "x" if r[0] == None else r[0].split("/")[1]
+    return "x" if r[0] is None else r[0].split("/")[1]
 
 
 def skip_record(record):
@@ -136,7 +135,7 @@ def battery_report(record, report):
 
     # Battery condition
     if record[13] == "Service Battery":
-        report["message"] += f"Battery condition: Service battery: {record[9]}\n"
+        report["message"] += f"Battery condition: Service battery\n"
         report["should"] = True
         battery_bad = True
 
@@ -155,7 +154,8 @@ def security_report(record, report):
 def uptime_report(record, report):
     """Generate report when computer is up for too long"""
     threshold = 90  # timestamp > 90 days
-    if record[10] is not None and (time.time() - int(record[10])) / 86400 > threshold:
+    uptime = (time.time() - int(record[10])) / 86400
+    if record[10] is not None and uptime > threshold:
         report["message"] += f"Last checkin: {time.ctime(int(record[10]))}\n"
         report["should"] = True
 
