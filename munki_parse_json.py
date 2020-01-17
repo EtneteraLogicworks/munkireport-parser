@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Oct 22 17:43:26 2019
-TODO:
-    - fancy output formatting
-    - refactoring to be future proof
 @author: cecky
+@maintainer: michal.moravec@logicworks.cz
 """
 import sys
 import json
