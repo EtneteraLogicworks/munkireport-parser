@@ -17,7 +17,7 @@ base_url='https://report.logicworks.cz/index.php?'
 login=''
 password=''
 
-unwanted = {"logicworks","logicworks_test","triad","sw"}
+unwanted = ["logicworks","logicworks_test","triad","sw", "unknown"]
 columns=[
     "munkireport.manifestname",
     "reportdata.serial_number",
@@ -66,60 +66,124 @@ def sortfunc(r):
     """Sort JSON array"""
     return "x" if r[0] == None else r[0].split("/")[1]
 
+def skip_record(record):
+    """Filter out unwanted records"""
+    if get_company(record) in unwanted:
+        return True
+
+    # We dont't care about records for other storage devices
+    if record[6] != "/":
+        return True
+
+    return False
+
+def get_company(record):
+    """Get customer company name"""
+    if record[0] is not None:
+        return record[0].split("/")[1]
+    else:
+        return "unknown"
+
+def generic_report(record, report):
+    """Add generic information to the report"""
+
+    company = get_company(record)
+    report["message"] += f"SLA: {company}\n"
+    report["message"] += f"Serial#: {record[1]}\n"
+    report["message"] += f"Model: {record[2]}\n"
+    report["message"] += f"Device type: {record[3]}\n"
+    report["message"] += f"Hostname: {record[4]}\n"
+
+    if record[5] is not None:
+        user_name = record[5]
+    else:
+        user_name = "unknown"
+    report["message"] += f"Name and surname: {user_name}\n"
+
+def storage_report(record, report):
+    """Generate report for low storage situation"""
+    threshold = 30000000000 # <= 30G local storage
+    if record[7] and int(record[7]) <= threshold:
+        value = float(record[7]) / 1000000000.0
+        report["message"] += f"Free space (GB): {value:.2f}\n"
+        report["should"]= True
+
+def smart_report(record, report):
+    """Generate report when there are smart errors"""
+    if record[8] is not None and int(record[8]) > 0:
+        report["message"] += f"SMART errors: {record[8]}\n"
+        report["should"]= True
+
+def battery_report(record, report):
+    """Generate report when battery is bad"""
+    # Capacity problem
+    threshold = 75
+    battery_bad = False
+    if record[9] is not None and int(record[9]) <= threshold:
+        report["message"] += f"Battery (%): {record[9]}\n"
+        report["should"]= True
+        battery_bad = True
+
+    # Battery condition
+    if record[13] == "Service Battery":
+        report["message"] += f"Battery condition: Service battery: {record[9]}\n"
+        report["should"]= True
+        battery_bad = True
+
+    if battery_bad and record[14] is not None:
+        report["message"] += f"Battery cycle count {record[14]}\n"
+
+def security_report(record, report):
+    """Generate report when security settings are disabled"""
+    # SIP status
+    if record[12] == "Disabled":
+        report["message"] += f"SIP status: Disabled\n"
+        report["should"]= True
+
+def uptime_report(record, report):
+    """Generate report when computer is up for too long"""
+    threshold = 90  # timestamp > 90 days
+    if record[10] is not None and (time.time() - int(record[10])) / 86400 > threshold:
+        report["message"] += f"Last checkin: {time.ctime(int(record[10]))}\n"
+        report["should"]= True
+
+def sensor_report(record, report):
+    """Generate report when sensor is in bad state"""
+    # bad fans
+    if record[11] == "1":
+        report["message"] += f"Fan errors !\n"
+        report["should"]= True
+
+def prepare_machine_report(record):
+    """Generates machine report"""
+
+    report = { "message": "", "should": False }
+
+    if skip_record(record):
+        return report
+
+    generic_report(record, report)
+    storage_report(record, report)
+    smart_report(record, report)
+    battery_report(record, report)
+    uptime_report(record, report)
+    security_report(record, report)
+    sensor_report(record, report)
+
+    report["message"] += "\n------\n"
+
+    return report
+
 def process_data(json_data):
     """Parse downloaded data and generate report"""
     mydata = json_data["data"]
     mydata.sort(key=sortfunc)
-    for rec in mydata:
-        company = "unknown" if rec[0] == None else rec[0].split("/")[1]
-        if  ((company not in unwanted) and (rec[6] == "/") and
-            (
-            # <= 30G local storage
-            (rec[6] == "/" and int(rec[7]) <= 32212254720)
-            # smart errors
-            or (rec[8] != None and int(rec[8]) > 0)
-            # <= 75% battery
-            or (rec[9] != None and int(rec[9]) <= 75)
-            # timestamp > 90 days
-            or (rec[10] != None and ((time.time() - int(rec[10]))/86400 > 90))
-            # bad fans
-            or (rec[11] != None and int(rec[11]) == "1")
-            # SIP status
-            or (rec[12] != None and rec[12] == "Disabled")
-            # battery condition
-            or (rec[13] != None and rec[13] == "Service Battery")
-            )):
-            print("SLA: ",company,
-                  #
-                  "\nSerial#: ",rec[1],
-                  #
-                  "\nModel: ",rec[2],
-                  #
-                  "\nDevice type: ",rec[3],
-                  #
-                  "\nHostname: ",rec[4],
-                  #
-                  "\nName and surname: ","unknown" if rec[5] == None else rec[5],
-                  #
-                  # "\nMountpoint: ","unknown" if rec[6] == None else rec[6],
-                  #
-                  "\nFree space (GB): "+str(float(rec[7])/1073741824.0) if (rec[6] == "/" and int(rec[7]) <= 32212254720) else "",
-                  #
-                  "\nSMART errors: "+str(int(rec[8])) if (rec[8] != None and int(rec[8]) > 0) else "",
-                  #
-                  "\nBattery (%): "+str(int(rec[9])) if (rec[9] != None and int(rec[9]) <= 75) else "",
-                  #
-                  "\nBattery condition: Service battery" if (rec[13] != None and rec[13] == "Service Battery") else "",
-                  #
-                  "\nBattery cycle count: "+str(int(rec[14])) if (rec[14]!=None) else "",
-                  #
-                  "\nSIP status: Disabled" if (rec[12] != None and rec[12] == "Disabled") else "",
-                  #
-                  "\nFan errors !" if (rec[11] != None and int(rec[11]) == "1") else "",
-                  #
-                  "\nLast checkin: "+str(time.ctime(int(rec[10]))) if (rec[10] != None and ((time.time() - int(rec[10]))/86400 > 90)) else "",
-                  "\n------\n"
-                  )
+    for record in mydata:
+        report = prepare_machine_report(record)
+        if report["should"]:
+            print(report["message"])
+        else:
+            continue
 
 def main():
     json_data = get_data()
