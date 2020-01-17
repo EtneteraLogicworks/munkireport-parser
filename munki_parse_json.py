@@ -5,6 +5,7 @@ Created on Tue Oct 22 17:43:26 2019
 @author: cecky
 @maintainer: michal.moravec@logicworks.cz
 """
+import collections
 import time
 
 import requests
@@ -46,7 +47,9 @@ def authenticate(session):
 
 def generate_column_query():
     """Generate Munkireport API column query"""
-    q = {"columns[{0}][name]".format(i): c for i, c in enumerate(columns)}
+    q = collections.OrderedDict()
+    for i, c in enumerate(columns):
+        q["columns[{0}][name]".format(i)] = c
     return q
 
 
