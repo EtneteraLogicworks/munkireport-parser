@@ -86,8 +86,8 @@ def get_company(record):
     """Get customer company name"""
     if record[0] is not None:
         return record[0].split("/")[1]
-    else:
-        return "unknown"
+
+    return "unknown"
 
 
 def generic_report(record, report):
@@ -202,6 +202,7 @@ def process_data(json_data):
 
 
 def main():
+    """Run program"""
     json_data = get_data()
     process_data(json_data)
 
