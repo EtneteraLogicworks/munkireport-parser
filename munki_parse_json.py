@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 22 17:43:26 2019
-@author: cecky
-@maintainer: michal.moravec@logicworks.cz
-"""
+
 import collections
 import time
 
