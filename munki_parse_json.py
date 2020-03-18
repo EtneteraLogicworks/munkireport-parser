@@ -6,7 +6,7 @@ import time
 import requests
 
 # Munkireport configuration
-base_url = "https://report.logicworks.cz/index.php?"
+base_url = ""
 login = ""
 password = ""
 
