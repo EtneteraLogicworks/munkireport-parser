@@ -107,7 +107,7 @@ def generic_report(record, report):
 
 def storage_report(record, report):
     """Generate report for low storage situation"""
-    threshold = 30000000000  # <= 30G local storage
+    threshold = 20000000000  # <= 20G local storage
     if record[7] and int(record[7]) <= threshold:
         value = float(record[7]) / 1000000000.0
         report["message"] += "Free space (GB): {0:.2g}\n".format(value)
