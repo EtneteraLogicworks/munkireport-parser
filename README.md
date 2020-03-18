@@ -2,7 +2,6 @@
 title: "Munkireport parser"
 original author: [Tomáš Jamrich]
 maintainer: [Michal Moravec]
-git: https://gitlab.lws.mit.etn/infra/munki_report_parser
 keywords: [Munkireport]
 ...
 
@@ -41,7 +40,7 @@ rec[14] -> Battery cycle count -> "power.cycle_count"
 
 Applied conditions:
 
-- <= 30GB of local storage (value is stored in B)
+- <= 20GB of local storage (value is stored in B)
 - smart errors > 0
 - <= 75% battery
 - report time > 90 days
@@ -49,10 +48,3 @@ Applied conditions:
 - SIP disabled =="Disabled"
 - battery power condition =="Service Battery"
 - add battery cycle counter
-
-# Exclude following machine groups
-
-- logicworks
-- logicworks_test
-- triad
-- sw
