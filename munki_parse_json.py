@@ -6,11 +6,11 @@ import time
 import requests
 
 # Munkireport configuration
-base_url = ""
-login = ""
-password = ""
+base_url = "{{ munkireport_parser.url }}"
+login = "{{ munkireport_parser.username }}"
+password = "{{ munkireport_parser.password }}"
 
-unwanted = ["logicworks", "logicworks_test", "triad", "sw", "unknown"]
+unwanted = [{{ munkireport_parser.unwanted_groups | wrap | join(', ') }}]
 columns = [
     "munkireport.manifestname",
     "reportdata.serial_number",
