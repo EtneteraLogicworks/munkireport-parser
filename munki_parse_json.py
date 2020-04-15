@@ -99,9 +99,9 @@ def determine_acknowledgement(record, report, ignore_string):
     return False
 
 
-def skip_record(record, excluded_companies):
+def skip_record(record, excluded_companies=None):
     """Filter out unwanted records"""
-    if get_company(record) in excluded_companies:
+    if get_company(record) in (excluded_companies or ()):
         return True
 
     # We dont't care about records for other storage devices
@@ -263,7 +263,7 @@ def process_data(json_data, config):
     computers = []
 
     for record in mydata:
-        report = prepare_machine_report(record, config["excluded"])
+        report = prepare_machine_report(record, config.get("excluded"))
         if report["should"]:
             report.pop("should", None)
             computers.append(report)

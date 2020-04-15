@@ -8,8 +8,9 @@ base_url: 'https://munkireport.example.org'
 username: 'parser'
 password: 'MyS3cr3tPass'
 
-# list of companies excluded from the report
-excluded:
-  - company_test
+# optional list of companies excluded from the report
+#excluded:
+#  - company_test
+#  - unknown
 
 ...
