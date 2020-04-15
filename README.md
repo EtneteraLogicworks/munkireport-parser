@@ -1,20 +1,15 @@
----
-title: "Munkireport parser"
-original author: [Tomáš Jamrich]
-maintainer: [Michal Moravec]
-keywords: [Munkireport]
-...
+# Munkireport parser
 
-This file describes scripts to get selected parameters from the munkireport API
-in the JSON format and to parse the output for better readability.
+Tool to create user-readable reports of selected paramaters from
+munkireport API.
 
----
 
-# Requirments
+## Requirments
 
-Script `munki_parse_json.py` requires `python3` and python `requests` library.
+See `requirments.txt` for required python3 packages
 
-# Categories
+
+## Categories
 
 Exported json contains following values:
 
@@ -36,7 +31,8 @@ rec[13] -> Power condition -> "power.condition"
 rec[14] -> Battery cycle count -> "power.cycle_count"
 ```
 
-# Conditions
+
+## Conditions
 
 Applied conditions:
 
