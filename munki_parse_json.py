@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
 import collections
+import sys
 import time
 
 import requests
 import yaml
 
 # Munkireport configuration
-BASE_URL = "{{ munkireport_parser.url }}"
-LOGIN = "{{ munkireport_parser.username }}"
-PASSWORD = "{{ munkireport_parser.password }}"
-
-UNWANTED = [ {{ munkireport_parser.unwanted_groups | wrap | join(', ') }} ]
+CONFIG_PATH = "munkireport-parser.yml"
 COLUMNS = [
     "munkireport.manifestname",
     "reportdata.serial_number",
@@ -49,10 +46,10 @@ POWER_CYCLE_COUNT = 14
 COMMENT_TEXT = 15
 
 
-def authenticate(session):
+def authenticate(session, base_url, login, password):
     """Authenticate and get a session cookie"""
-    auth_url = "{0}/auth/login".format(BASE_URL)
-    auth_data = {"login": LOGIN, "password": PASSWORD}
+    auth_url = "{0}/auth/login".format(base_url)
+    auth_data = {"login": login, "password": password}
     auth_request = session.post(auth_url, data=auth_data)
     if auth_request.status_code != 200:
         print("Invalid url!")
@@ -67,18 +64,18 @@ def generate_column_query():
     return col_query
 
 
-def query(session, data):
+def query(session, base_url, data):
     """Query Munkireport API"""
-    query_url = "{0}/datatables/data".format(BASE_URL)
+    query_url = "{0}/datatables/data".format(base_url)
     query_data = session.post(query_url, data)
     return query_data.json()
 
 
-def get_data():
+def get_data(config):
     """Get data required for this script from Munkireport"""
     session = requests.Session()
-    authenticate(session)
-    json_data = query(session, data=generate_column_query())
+    authenticate(session, config["base_url"], config["username"], config["password"])
+    json_data = query(session, config["base_url"], data=generate_column_query())
     return json_data
 
 
@@ -101,9 +98,9 @@ def determine_acknowledgement(record, report, ignore_string):
     return False
 
 
-def skip_record(record):
-    """Filter out UNWANTED records"""
-    if get_company(record) in UNWANTED:
+def skip_record(record, excluded_companies):
+    """Filter out unwanted records"""
+    if get_company(record) in excluded_companies:
         return True
 
     # We dont't care about records for other storage devices
@@ -238,12 +235,12 @@ def sensor_report(record, report):
         )
 
 
-def prepare_machine_report(record):
+def prepare_machine_report(record, excluded_companies):
     """Generates machine report"""
 
     report = {"should": False, "Problems": {}}
 
-    if skip_record(record):
+    if skip_record(record, excluded_companies):
         return report
 
     generic_report(record, report)
@@ -257,7 +254,7 @@ def prepare_machine_report(record):
     return report
 
 
-def process_data(json_data):
+def process_data(json_data, config):
     """Parse downloaded data and generate report"""
     mydata = json_data["data"]
     mydata.sort(key=sortfunc)
@@ -265,7 +262,7 @@ def process_data(json_data):
     computers = []
 
     for record in mydata:
-        report = prepare_machine_report(record)
+        report = prepare_machine_report(record, config["excluded"])
         if report["should"]:
             report.pop("should", None)
             computers.append(report)
@@ -273,10 +270,21 @@ def process_data(json_data):
     print(yaml.dump(computers, allow_unicode=True, default_flow_style=False))
 
 
+def parse_config(config_path):
+    """Parse provided configuration file"""
+    try:
+        with open(config_path) as f:
+            return yaml.load(f, Loader=yaml.SafeLoader)
+    except yaml.error.YAMLError as e:
+        print("Failed to load YAML config: {}".format(e), file=sys.stderr)
+        sys.exit(1)
+
+
 def main():
     """Run program"""
-    json_data = get_data()
-    process_data(json_data)
+    config = parse_config(CONFIG_PATH)
+    json_data = get_data(config)
+    process_data(json_data, config)
 
 
 if __name__ == "__main__":

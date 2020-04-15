@@ -4,3 +4,6 @@
 *.pyc
 __pycache__
 *.egg-info/
+
+# default munkireport configuration file
+/munkireport-parser.yml
