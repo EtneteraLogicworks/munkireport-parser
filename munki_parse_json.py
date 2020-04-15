@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import collections
 import sys
 import time
@@ -8,7 +9,7 @@ import requests
 import yaml
 
 # Munkireport configuration
-CONFIG_PATH = "munkireport-parser.yml"
+CONFIG_PATH_DEFAULT = "munkireport-parser.yml"
 COLUMNS = [
     "munkireport.manifestname",
     "reportdata.serial_number",
@@ -270,11 +271,26 @@ def process_data(json_data, config):
     print(yaml.dump(computers, allow_unicode=True, default_flow_style=False))
 
 
-def parse_config(config_path):
+def parse_args():
+    """Define argument parser and returns parsed command line arguments"""
+    parser = argparse.ArgumentParser(
+       description="Tool to create user-readable reports of selected paramaters from munkireport",
+    )
+    parser.add_argument(
+        "-c", "--config",
+        dest='config_file',
+        type=argparse.FileType('r'),
+        default=CONFIG_PATH_DEFAULT,
+        help="Path to configuration file"
+    )
+
+    return parser.parse_args()
+
+
+def parse_config(config_file):
     """Parse provided configuration file"""
     try:
-        with open(config_path) as f:
-            return yaml.load(f, Loader=yaml.SafeLoader)
+        return yaml.load(config_file, Loader=yaml.SafeLoader)
     except yaml.error.YAMLError as e:
         print("Failed to load YAML config: {}".format(e), file=sys.stderr)
         sys.exit(1)
@@ -282,7 +298,9 @@ def parse_config(config_path):
 
 def main():
     """Run program"""
-    config = parse_config(CONFIG_PATH)
+    args = parse_args()
+    config = parse_config(args.config_file)
+
     json_data = get_data(config)
     process_data(json_data, config)
 
