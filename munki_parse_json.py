@@ -270,7 +270,7 @@ def process_data(json_data):
             report.pop("should", None)
             computers.append(report)
 
-    print(yaml.dump(computers, allow_unicode=True))
+    print(yaml.dump(computers, allow_unicode=True, default_flow_style=False))
 
 
 def main():
