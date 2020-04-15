@@ -10,6 +10,12 @@ import yaml
 
 # Munkireport configuration
 CONFIG_PATH_DEFAULT = "munkireport-parser.yml"
+CONFIG_REQUIRED_PARAMETERS = (
+    "base_url",
+    "username",
+    "password",
+)
+
 COLUMNS = [
     "munkireport.manifestname",
     "reportdata.serial_number",
@@ -45,6 +51,10 @@ SECURITY_SIP = 12
 POWER_CONDITON = 13
 POWER_CYCLE_COUNT = 14
 COMMENT_TEXT = 15
+
+
+class MunkiParseError(Exception):
+    pass
 
 
 def authenticate(session, base_url, login, password):
@@ -288,11 +298,20 @@ def parse_args():
 
 
 def parse_config(config_file):
-    """Parse provided configuration file"""
+    """Parse and check provided configuration file"""
     try:
-        return yaml.load(config_file, Loader=yaml.SafeLoader)
+        config = yaml.load(config_file, Loader=yaml.SafeLoader)
+        for member in CONFIG_REQUIRED_PARAMETERS:
+            if member not in config:
+                raise MunkiParseError("'{}' parameter is missing in the config".format(member))
+        return config
+
     except yaml.error.YAMLError as e:
         print("Failed to load YAML config: {}".format(e), file=sys.stderr)
+        sys.exit(1)
+
+    except MunkiParseError as e:
+        print(str(e), file=sys.stderr)
         sys.exit(1)
 
 
