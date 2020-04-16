@@ -1,0 +1,16 @@
+---
+## munkireport-parser configuration file
+
+# base URL for queries
+base_url: 'https://munkireport.example.org'
+
+# munkireport authentication credentials
+username: 'parser'
+password: 'MyS3cr3tPass'
+
+# optional list of companies excluded from the report
+#excluded:
+#  - company_test
+#  - unknown
+
+...

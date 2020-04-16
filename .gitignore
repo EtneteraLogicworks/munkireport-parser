@@ -1,0 +1,9 @@
+## gitignore
+
+# Python cache files and directories
+*.pyc
+__pycache__
+*.egg-info/
+
+# default munkireport configuration file
+/munkireport-parser.yml
