@@ -102,7 +102,7 @@ def determine_acknowledgement(record, report, ignore_string):
     else:
         comment = ""
     if ignore_string in comment:
-        report["should"] = True
+        report["should"] = False
         return True
 
     report["should"] = True
