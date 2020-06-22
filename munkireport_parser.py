@@ -78,7 +78,8 @@ def generate_column_query():
 def query(session, base_url, data):
     """Query Munkireport API"""
     query_url = "{0}/datatables/data".format(base_url)
-    query_data = session.post(query_url, data)
+    headers = {"x-csrf-token": session.cookies["CSRF-TOKEN"]}
+    query_data = session.post(query_url, data, headers=headers)
     return query_data.json()
 
 
