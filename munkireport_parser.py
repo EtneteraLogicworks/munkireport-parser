@@ -33,6 +33,7 @@ COLUMNS = [
     "power.condition",
     "power.cycle_count",
     "comment.text",
+    "smart_stats.overall_health",
 ]
 
 MANIFEST_NAME = 0
@@ -43,7 +44,7 @@ COMPUTER_NAME = 4
 LONG_USERNAME = 5
 MOUNTPOINT = 6
 FREESPACE = 7
-SMARTS_ERROR_COUNT = 8
+SMART_ERROR_COUNT = 8
 POWER_MAX_PERCENT = 9
 REPORT_TIMESTAMP = 10
 FAN_TEMS_MSSFF = 11
@@ -51,6 +52,7 @@ SECURITY_SIP = 12
 POWER_CONDITON = 13
 POWER_CYCLE_COUNT = 14
 COMMENT_TEXT = 15
+SMART_HEALTH = 16
 
 
 class MunkiParseError(Exception):
@@ -162,18 +164,25 @@ def storage_report(record, report):
         add_problem(
             report,
             "Storage",
-            { "Free space": "{0:.2g} GB".format(value) },
+            {"Free space": "{0:.2g} GB".format(value)},
             determine_acknowledgement(record, report, "ack-storage"),
         )
 
 
 def smart_report(record, report):
     """Generate report when there are smart errors"""
-    if record[SMARTS_ERROR_COUNT] is not None and int(record[SMARTS_ERROR_COUNT]) > 0:
+    if record[SMART_HEALTH] == "FAILED!":
         add_problem(
             report,
             "SMART",
-            "SMART errors: {}".format(record[SMARTS_ERROR_COUNT]),
+            "SMART health: FAILED!",
+            determine_acknowledgement(record, report, "ack-smart"),
+        )
+    elif record[SMART_ERROR_COUNT] is not None and int(record[SMART_ERROR_COUNT]) > 0:
+        add_problem(
+            report,
+            "SMART",
+            "SMART errors: {}".format(record[SMART_ERROR_COUNT]),
             determine_acknowledgement(record, report, "ack-smart"),
         )
 
@@ -285,14 +294,15 @@ def process_data(json_data, config):
 def parse_args():
     """Define argument parser and returns parsed command line arguments"""
     parser = argparse.ArgumentParser(
-       description="Tool to create user-readable reports of selected paramaters from munkireport",
+        description="Tool to create user-readable reports of selected paramaters from munkireport",
     )
     parser.add_argument(
-        "-c", "--config",
-        dest='config_file',
-        type=argparse.FileType('r'),
+        "-c",
+        "--config",
+        dest="config_file",
+        type=argparse.FileType("r"),
         default=CONFIG_PATH_DEFAULT,
-        help="Path to configuration file"
+        help="Path to configuration file",
     )
 
     return parser.parse_args()
@@ -304,7 +314,9 @@ def parse_config(config_file):
         config = yaml.load(config_file, Loader=yaml.SafeLoader)
         for member in CONFIG_REQUIRED_PARAMETERS:
             if member not in config:
-                raise MunkiParseError("'{}' parameter is missing in the config".format(member))
+                raise MunkiParseError(
+                    "'{}' parameter is missing in the config".format(member)
+                )
         return config
 
     except yaml.error.YAMLError as e:
